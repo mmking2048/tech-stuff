@@ -71,7 +71,47 @@ Navigating to http://localhost:1234/ in a browser, you should see the applicatio
 
 ## ClusterIP
 
-A ClusterIP is a service that does an internal mapping within kubernetes and allows other apps within the cluster to access your application. Note that this does NOT allow external access by default.
+A ClusterIP is a service that does an internal mapping within kubernetes and allows other apps within the cluster to access your application. Note that this does NOT allow external access.
+
+To setup the ClusterIP service, the following yaml file was used ([clusterip.yaml](clusterip.yaml)):
+
+``` yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: clusterip
+spec:
+  selector:
+    app: webapplication1
+  type: ClusterIP # default is ClusterIP if unspecified
+  ports:
+  - port: 1234 # kubernetes port
+    targetPort: 80 # pod port
+```
+
+There are several things to note about the above file. First, the type in the above yaml file is specified as "ClusterIP". The type defaults to ClusterIP when unspecified . Second, the ports mapping is from kubernetes to the pod. Therefore, the "port" refers to the kubernetes port, and "targetPort" refers to the pod port.
+
+Apply the yaml file:
+
+```
+kubectl apply -f clusterip.yaml
+```
+
+In order to access the application, we need a connection between the local machine and the kubernetes service. This can be done through the kubernetes proxy.
+
+Use the following command:
+
+```
+kubectl proxy --port=3333
+```
+
+The above command opens a connection on port 3333 on the local machine to the kubernetes service.
+
+Navigating to http://localhost:3333/ gives access to the [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/).
+
+To access the application, navigate to http://localhost:3333/api/v1/namespaces/default/services/clusterip:1234/proxy/. You should see the application as expected:
+
+![ASP.NET core default application via proxy](img/proxy.png)
 
 ## NodePort
 

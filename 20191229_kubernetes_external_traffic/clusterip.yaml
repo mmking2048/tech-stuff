@@ -5,10 +5,7 @@ metadata:
 spec:
   selector:
     app: webapplication1
+  type: ClusterIP
   ports:
-  - port: 1234 # this is kubernetes port
-    targetPort: 80 # this is pod port
-
-# to access application
-# kubectl proxy (or kubectl proxy --port=#)
-# http://localhost:#/api/v1/namespaces/default/services/clusterip:1234/proxy/
+  - port: 1234
+    targetPort: 80
