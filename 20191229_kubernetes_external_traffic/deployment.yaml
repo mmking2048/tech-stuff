@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapplication1
+spec:
+  selector:
+    matchLabels:
+      app: webapplication1
+  
+  template:
+    metadata:
+      labels:
+        app: webapplication1
+    
+    spec:
+      containers:
+      - name: webapplication1
+  
+        image: micya/webapplication1
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 80

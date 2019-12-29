@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: loadbalancer
+spec:
+  selector:
+    app: webapplication1
+  ports:
+    - port: 3355 # kubernetes port
+      targetPort: 80 # pod port
+  type: LoadBalancer
+
+# AKS has a LoadBalancer included in kubernetes cluster by default
+# so in AKS, this creates a new public IP and associates it with LoadBalancer
