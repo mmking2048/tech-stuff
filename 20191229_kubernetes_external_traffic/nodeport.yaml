@@ -5,12 +5,8 @@ metadata:
 spec:
   selector:
     app: webapplication1
-  type: NodePort # note that default is ClusterIP
+  type: NodePort
   ports:
   - port: 10 # kubernetes port, useless in this case (but still required)
     targetPort: 80 # pod port
-    nodePort: 30080 # VM port
-
-# this is largely useless as AKS does not expose node ip
-# can be checked with local kubernetes cluster (docker for desktop)
-# access by using localhost (https://stackoverflow.com/a/56558795/4342319)
+    nodePort: 30080 # node port

@@ -113,7 +113,40 @@ To access the application, navigate to http://localhost:3333/api/v1/namespaces/d
 
 ![ASP.NET core default application via proxy](img/proxy.png)
 
+ClusterIP is primarily used for debugging or internal routing.
+
 ## NodePort
+
+A NodePort service opens a port on all nodes. Traffic is routed from the nodes to the kubernetes service to each pod.
+
+To setup the NodePort service, the following yaml file was used ([nodeport.yaml](nodeport.yaml)):
+
+``` yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nodeport
+spec:
+  selector:
+    app: webapplication1
+  type: NodePort
+  ports:
+  - port: 10 # kubernetes port, useless in this case (but still required)
+    targetPort: 80 # pod port
+    nodePort: 30080 # node port
+```
+
+Note that three ports are required for the ports section: port (the kubernetes port), targetPort (the pod port), and nodePort (the node or VM port).
+
+Apply the yaml file:
+
+```
+kubectl apply -f nodeport.yaml
+```
+
+To access the application, we would need the IP address of the nodes. AKS does not expose node IPs, so I tested the nodeport with a local Docker for Desktop kubernetes cluster. Docker for Desktop nodes just map to localhost (see [this Stack Overflow post](https://stackoverflow.com/a/56558795/4342319)).
+
+Navigating to http://localhost:30080/ shows the application as expected.
 
 ## LoadBalancer
 
