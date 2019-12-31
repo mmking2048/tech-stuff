@@ -8,6 +8,10 @@ For testing purposes, I created a blank ASP.NET core application, built a docker
 
 I did most of my testing on an AKS cluster.
 
+When provisioning an AKS cluster, a separate resource group is created with several resources in it:
+
+![AKS resources](img/aks_original.png)
+
 To deploy the application to my kubernetes cluster, I used the following yaml ([deployment.yaml](deployment.yaml)):
 
 ``` yaml
@@ -149,5 +153,62 @@ To access the application, we would need the IP address of the nodes. AKS does n
 Navigating to http://localhost:30080/ shows the application as expected.
 
 ## LoadBalancer
+
+A LoadBalancer is the recommended way to allow external traffic to the kubernetes cluster. External traffic would access exposed services on the kubernetes cluster through an external IP address.
+
+For setup, the following yaml file was used ([loadbalancer.yaml](loadbalancer.yaml)):
+
+``` yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: loadbalancer
+spec:
+  selector:
+    app: webapplication1
+  ports:
+    - port: 3355 # external port
+      targetPort: 80 # pod port
+  type: LoadBalancer
+
+# AKS has a LoadBalancer included in kubernetes cluster by default
+# so in AKS, this creates a new public IP and associates it with LoadBalancer
+```
+
+Here, "port" refers to the external port (port on LoadBalancer) and "targetPort" refers to the pod port.
+
+Apply this yaml file:
+
+```
+kubectl apply -f loadbalancer.yaml
+```
+
+Checking for services, there is a new LoadBalancer service with external IP address pending:
+
+```
+>kubectl get services
+NAME           TYPE           CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
+kubernetes     ClusterIP      10.0.0.1       <none>        443/TCP          14d
+loadbalancer   LoadBalancer   10.0.177.228   <pending>     3355:31619/TCP   6s
+```
+
+Checking again after a while:
+
+```
+>kubectl get services
+NAME           TYPE           CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
+kubernetes     ClusterIP      10.0.0.1       <none>        443/TCP          14d
+loadbalancer   LoadBalancer   10.0.177.228   13.86.5.32    3355:31619/TCP   83s
+```
+
+Navigating to http://13.86.5.32:3355/ shows the application as expected:
+
+![application through LoadBalancer](img/loadbalancer.png)
+
+In the AKS resource group, new Public IP address has been created with the IP we see in `kubectl get services` (13.86.5.32), and this IP is associated with the LoadBalancer, allowing traffic to be routed to the cluster. So for each LoadBalancer service deployed through kubernetes, a Public IP address resource is created.
+
+![new public IP is created in AKS](img/aks_loadbalancer.png)
+
+Deleting the LoadBalancer service automatically deletes the public ip in Azure as well.
 
 ## Ingress
