@@ -170,9 +170,6 @@ spec:
     - port: 3355 # external port
       targetPort: 80 # pod port
   type: LoadBalancer
-
-# AKS has a LoadBalancer included in kubernetes cluster by default
-# so in AKS, this creates a new public IP and associates it with LoadBalancer
 ```
 
 Here, "port" refers to the external port (port on LoadBalancer) and "targetPort" refers to the pod port.
@@ -212,3 +209,61 @@ In the AKS resource group, new Public IP address has been created with the IP we
 Deleting the LoadBalancer service automatically deletes the public ip in Azure as well.
 
 ## Ingress
+
+Rather than specifying a LoadBalancer per service, it is possible to achieve more granular routing by using an ingress controller and ingress routes.
+
+Install a simple ingress controller:
+
+```
+helm install nginx-ingress stable/nginx-ingress
+```
+
+Checking that the services are up:
+
+```
+> kubectl get services
+
+NAME                            TYPE           CLUSTER-IP     EXTERNAL-IP    PORT(S)                      AGE
+kubernetes                      ClusterIP      10.0.0.1       <none>         443/TCP                      14d
+nginx-ingress-controller        LoadBalancer   10.0.250.183   13.86.7.172    80:30186/TCP,443:30723/TCP   17m
+nginx-ingress-default-backend   ClusterIP      10.0.1.45      <none>         80/TCP                       17m
+```
+
+Ingress routes are specified by yaml files. A sample one is in [ingress.yaml](ingress.yaml):
+
+``` yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress
+spec:
+  rules:
+  - host: mydomain.com
+    http:
+      paths:
+      - backend:
+          serviceName: clusterip
+          servicePort: 1234 # clusterip kubernetes port
+```
+
+Note that the above makes use of ClusterIP (defined in [clusterip.yaml](clusterip.yaml)) as ingress requires a ClusterIP service mapping.
+
+The yaml file defines routing from the external ip to different services via different urls. Here, the only path defined is the default / path, referring to all urls of the form mydomain.com/*.
+
+Apply the yaml file:
+
+```
+kubectl apply -f ingress.yaml
+```
+
+As host name was specified to be mydomain.com, kubernetes will expect to receive requests with this domain name. Thus it is necessary to map the external ip address of the ingress controller (13.86.7.172) to the domain name.
+
+In Windows, this can be done by modifying the "C:\Windows\System32\drivers\etc\hosts" file and adding the following:
+
+```
+13.86.7.172 mydomain.com
+```
+
+Navigating to mydomain.com shows the application as expected.
+
+![accessing application through ingress](img/ingress.png)
