@@ -1,6 +1,6 @@
 ## Kubernetes scaling
 
-### Vocabulary
+### Concepts
 
 - Pod
     - Atomic unit in kubernetes
@@ -73,10 +73,33 @@ hpa-example-68fb5754f6-9q29f   1/1     Running   0          35s
 hpa-example-68fb5754f6-q7fm4   1/1     Running   0          35s
 ```
 
-### Request and limits
-
 ### Metrics server
 
+- Collects metrics (CPU & memory) from each node and publishes to kubernetes
+- https://github.com/kubernetes-sigs/metrics-server
+
+Enabled by default in AKS.
+
+Check pod CPU & memory usage:
+
+```
+kubectl top pod --all-namespaces
+```
+
+Check node CPU & memory usage:
+
+```
+kubectl top node
+```
+
+### Request and limits
+
+- Requests and limits can be specified on each container.
+- Requests: Minimum resource usage. Kubernetes will reserve this for each pod and use this to schedule pods.
+- Limits: Maximum resource usage. Kubernetes will throttle or kill pods that exceed the limit
+- https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+
+**NOTE:** It is considered best practice to specify both request and limit. It is extremely important to specify limit, as failing to do so can result in starvation.
 
 ### Autoscaling
 
@@ -87,7 +110,7 @@ $ kubectl autoscale deployment hpa-example --max=10
 horizontalpodautoscaler.autoscaling/hpa-example autoscaled
 ```
 
-There is a new resource called a horizontal pod autoscaler (HPA), which monitors the CPU usage relative to the pod CPU limit and autoscale threshold.
+There is a new resource created called a horizontal pod autoscaler (HPA), which monitors the CPU usage relative to the pod CPU limit and autoscale threshold.
 
 Check the HPA:
 
@@ -98,3 +121,10 @@ hpa-example   Deployment/hpa-example   <unknown>/80%   1         10        3    
 ```
 
 ### Kubernetes event driven autoscaler (KEDA)
+
+- Allows autoscaling by external metrics
+- Example: autoscaling based on messages in a message queue
+- https://keda.sh/
+- Works by publishing external metrics to kubernetes and creating a horizontal pod autoscaler on top
+- How it works: https://keda.sh/docs/1.5/concepts/
+- Samples: https://github.com/kedacore/samples
