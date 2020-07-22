@@ -210,7 +210,7 @@ hpa-example   Deployment/hpa-example   64%/80%         1         10        2    
 
 Notice that the autoscaler has scaled up the number of pods in the deployment due to load.
 
-If given enough load, Azure should eventually add another node to the cluster:
+Eventually the node will run out of resources to schedule new pods (pending state). Azure will add another node to the cluster:
 
 ```
 $ kubectl get nodes
@@ -233,8 +233,7 @@ $ kubectl delete -f hpa-example
 deployment.apps "hpa-example" deleted
 service "hpa-example" deleted
 $ kubectl delete hpa hpa-example
-d
-m
+horizontalpodautoscaler.autoscaling "hpa-example" deleted
 ```
 
 ### Kubernetes event driven autoscaler (KEDA)
